@@ -154,7 +154,7 @@
 
   // === Intentar reproducir música al cargar (fallback si el navegador lo permite) ===
   window.addEventListener('load', () => {
-    bgMusic.volume = 0.3;
+    bgMusic.volume = 0.1;
     bgMusic.play().catch(() => {
       // Si es bloqueado, se intentará en el primer clic del usuario
       console.log('Autoplay bloqueado, se iniciará con interacción del usuario');
@@ -169,7 +169,7 @@
     userInteracted = true;
     
     // Asegurar que la música esté sonando
-    bgMusic.volume = 0.2;
+    bgMusic.volume = 0.1;
     bgMusic.play().catch(() => {});
 
     // Mostrar modal de contraseña
