@@ -135,50 +135,115 @@
   </audio>
 
   <script>
-    // Generar destellos aleatorios
-    for (let i = 0; i < 60; i++) {
-      const s = document.createElement('div');
-      s.className = 'sparkle';
-      s.style.left = Math.random() * 100 + '%';
-      s.style.top = Math.random() * 100 + '%';
-      s.style.animationDelay = Math.random() * 4 + 's';
-      document.body.appendChild(s);
-    }
+  // === Generar destellos ===
+  for (let i = 0; i < 60; i++) {
+    const s = document.createElement('div');
+    s.className = 'sparkle';
+    s.style.left = Math.random() * 100 + '%';
+    s.style.top = Math.random() * 100 + '%';
+    s.style.animationDelay = Math.random() * 4 + 's';
+    document.body.appendChild(s);
+  }
 
-    let userInteracted = false;
+  // === Variables globales ===
+  const bgMusic = document.getElementById('bgMusic');
+  let userInteracted = false;
+  let videoPlaying = false;
+  let ytPlayer = null;
 
-    // Detectar primer clic en cualquier parte (excepto modales)
-    document.body.addEventListener('click', function(e) {
-      if (userInteracted) return;
-      if (e.target.closest('#passwordModal') || e.target.closest('#videoContainer')) return;
-      
-      userInteracted = true;
-      
-      // Reproducir audio (los navegadores lo permiten tras interacción del usuario)
-      const audio = document.getElementById('bgMusic');
-      audio.volume = 0.2; // 20% de volumen
-      audio.play().catch(() => {});
-
-      // Mostrar modal de contraseña
-      document.getElementById('passwordModal').style.display = 'flex';
+  // === Intentar reproducir música al cargar (fallback si el navegador lo permite) ===
+  window.addEventListener('load', () => {
+    bgMusic.volume = 0.2;
+    bgMusic.play().catch(() => {
+      // Si es bloqueado, se intentará en el primer clic del usuario
+      console.log('Autoplay bloqueado, se iniciará con interacción del usuario');
     });
+  });
 
-    // Validar contraseña
-    function checkPass() {
-      const pass = document.getElementById('passInput').value;
-      if (pass === '114') {
-        document.getElementById('passwordModal').style.display = 'none';
-        document.getElementById('videoContainer').style.display = 'flex';
+  // === Primer clic del usuario ===
+  document.body.addEventListener('click', function(e) {
+    if (userInteracted) return;
+    if (e.target.closest('#passwordModal') || e.target.closest('#videoContainer')) return;
+    
+    userInteracted = true;
+    
+    // Asegurar que la música esté sonando
+    bgMusic.volume = 0.2;
+    bgMusic.play().catch(() => {});
+
+    // Mostrar modal de contraseña
+    document.getElementById('passwordModal').style.display = 'flex';
+  });
+
+  // === Validar contraseña ===
+  function checkPass() {
+    const pass = document.getElementById('passInput').value;
+    if (pass === '114') {
+      document.getElementById('passwordModal').style.display = 'none';
+      document.getElementById('videoContainer').style.display = 'flex';
+      
+      // Inicializar YouTube Player API si no está cargado
+      if (!window.YT) {
+        const tag = document.createElement('script');
+        tag.src = 'https://www.youtube.com/iframe_api';
+        document.head.appendChild(tag);
+        window.onYouTubeIframeAPIReady = initYouTubePlayer;
       } else {
-        document.getElementById('errorMsg').style.display = 'block';
-        document.getElementById('passInput').value = '';
+        initYouTubePlayer();
       }
+    } else {
+      document.getElementById('errorMsg').style.display = 'block';
+      document.getElementById('passInput').value = '';
     }
+  }
 
-    // Permitir Enter para enviar contraseña
-    document.getElementById('passInput').addEventListener('keypress', function(e) {
-      if (e.key === 'Enter') checkPass();
+  // === Inicializar reproductor de YouTube con eventos ===
+  function initYouTubePlayer() {
+    const iframe = document.getElementById('videoFrame');
+    ytPlayer = new YT.Player('videoFrame', {
+      events: {
+        'onReady': onPlayerReady,
+        'onStateChange': onPlayerStateChange
+      }
     });
-  </script>
+  }
+
+  function onPlayerReady(event) {
+    event.target.playVideo(); // Autoplay del video
+  }
+
+  function onPlayerStateChange(event) {
+    const YT_STATE = YT.PlayerState;
+    
+    switch(event.data) {
+      case YT_STATE.PLAYING: // -1 o 1: video reproduciéndose
+        videoPlaying = true;
+        bgMusic.pause(); // Pausar música de fondo
+        break;
+        
+      case YT_STATE.PAUSED: // 2: video pausado
+      case YT_STATE.ENDED:  // 0: video terminado
+      case YT_STATE.CUED:   // 5: video en cola
+        videoPlaying = false;
+        // Reanudar música solo si el usuario ya interactuó antes
+        if (userInteracted) {
+          bgMusic.play().catch(() => {});
+        }
+        break;
+    }
+  }
+
+  // === Permitir Enter para enviar contraseña ===
+  document.getElementById('passInput').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') checkPass();
+  });
+
+  // === Si el usuario hace clic en la página mientras el video está pausado, reanudar música ===
+  document.addEventListener('click', function(e) {
+    if (!videoPlaying && userInteracted && !e.target.closest('#passwordModal')) {
+      bgMusic.play().catch(() => {});
+    }
+  });
+</script>
 </body>
 </html>
