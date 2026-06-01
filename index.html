@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Página Especial</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #000;
+      color: #fff;
+      font-family: 'Segoe UI', sans-serif;
+      height: 100vh;
+      overflow: hidden;
+      cursor: pointer;
+    }
+
+    /* Luna morada superior izquierda */
+    .moon {
+      position: absolute;
+      top: 40px;
+      left: 40px;
+      width: 90px;
+      height: 90px;
+      background: radial-gradient(circle at 30% 30%, #c3a6ff, #7c4dff);
+      border-radius: 50%;
+      box-shadow: 0 0 50px 15px rgba(179, 157, 219, 0.5);
+      z-index: 1;
+    }
+
+    /* Destellos morados */
+    .sparkle {
+      position: absolute;
+      width: 3px;
+      height: 3px;
+      background: #d1c4e9;
+      border-radius: 50%;
+      animation: twinkle 4s infinite ease-in-out;
+      opacity: 0;
+      z-index: 0;
+    }
+    @keyframes twinkle {
+      0%, 100% { opacity: 0.15; transform: scale(1); }
+      50% { opacity: 0.9; transform: scale(1.6); }
+    }
+
+    /* Modal de contraseña */
+    #passwordModal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.85);
+      justify-content: center;
+      align-items: center;
+      z-index: 100;
+    }
+    .modal-box {
+      background: #111;
+      padding: 30px;
+      border-radius: 12px;
+      text-align: center;
+      border: 1px solid #7c4dff;
+      box-shadow: 0 0 25px rgba(124,77,255,0.3);
+    }
+    .modal-box input {
+      padding: 10px 15px;
+      font-size: 16px;
+      background: #222;
+      color: #fff;
+      border: 1px solid #555;
+      border-radius: 6px;
+      outline: none;
+      text-align: center;
+    }
+    .modal-box button {
+      display: block;
+      margin: 15px auto 0;
+      padding: 10px 24px;
+      background: #7c4dff;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 15px;
+    }
+    .modal-box button:hover { background: #651fff; }
+    #errorMsg { color: #ff5252; margin-top: 10px; display: none; font-size: 14px; }
+
+    /* Contenedor del video */
+    #videoContainer {
+      display: none;
+      position: fixed;
+      inset: 0;
+      justify-content: center;
+      align-items: center;
+      z-index: 50;
+    }
+    iframe {
+      width: 85%;
+      max-width: 1100px;
+      height: 65vh;
+      border: none;
+      border-radius: 10px;
+      box-shadow: 0 0 40px rgba(124, 77, 255, 0.35);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="moon"></div>
+
+  <!-- Modal de contraseña -->
+  <div id="passwordModal">
+    <div class="modal-box">
+      <h3 style="margin-bottom:15px;">🔐 Introduce la contraseña</h3>
+      <input type="password" id="passInput" placeholder="• • •" maxlength="10">
+      <br>
+      <button onclick="checkPass()">Acceder</button>
+      <p id="errorMsg">Contraseña incorrecta</p>
+    </div>
+  </div>
+
+  <!-- Video modo cine -->
+  <div id="videoContainer">
+    <!-- Reemplaza VIDEO_ID con el ID de tu video de YouTube -->
+    <iframe id="videoFrame" 
+      src="https://www.youtube.com/embed/VIDEO_ID?autoplay=1&controls=0&modestbranding=1&rel=0&loop=1&playlist=VIDEO_ID&start=0" 
+      allow="autoplay; encrypted-media" allowfullscreen></iframe>
+  </div>
+
+  <!-- Música de fondo -->
+  <audio id="bgMusic" loop>
+    <!-- Reemplaza con tu archivo .mp3 subido al mismo hosting o una URL directa -->
+    <source src="musica.mp3" type="audio/mpeg">
+  </audio>
+
+  <script>
+    // Generar destellos aleatorios
+    for (let i = 0; i < 60; i++) {
+      const s = document.createElement('div');
+      s.className = 'sparkle';
+      s.style.left = Math.random() * 100 + '%';
+      s.style.top = Math.random() * 100 + '%';
+      s.style.animationDelay = Math.random() * 4 + 's';
+      document.body.appendChild(s);
+    }
+
+    let userInteracted = false;
+
+    // Detectar primer clic en cualquier parte (excepto modales)
+    document.body.addEventListener('click', function(e) {
+      if (userInteracted) return;
+      if (e.target.closest('#passwordModal') || e.target.closest('#videoContainer')) return;
+      
+      userInteracted = true;
+      
+      // Reproducir audio (los navegadores lo permiten tras interacción del usuario)
+      const audio = document.getElementById('bgMusic');
+      audio.volume = 0.2; // 20% de volumen
+      audio.play().catch(() => {});
+
+      // Mostrar modal de contraseña
+      document.getElementById('passwordModal').style.display = 'flex';
+    });
+
+    // Validar contraseña
+    function checkPass() {
+      const pass = document.getElementById('passInput').value;
+      if (pass === '114') {
+        document.getElementById('passwordModal').style.display = 'none';
+        document.getElementById('videoContainer').style.display = 'flex';
+      } else {
+        document.getElementById('errorMsg').style.display = 'block';
+        document.getElementById('passInput').value = '';
+      }
+    }
+
+    // Permitir Enter para enviar contraseña
+    document.getElementById('passInput').addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') checkPass();
+    });
+  </script>
+</body>
+</html>
